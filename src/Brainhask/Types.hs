@@ -6,12 +6,6 @@ module Brainhask.Types where
 import Data.Data
 import Data.Monoid
 
-data MoveT
-data ModifyT
-data InOutT
-data EmptyT
-data LoopT
-
 data Op  a  = NoOp
             | Move   !a
             | Modify !a
