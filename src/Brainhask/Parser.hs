@@ -1,4 +1,4 @@
-module Brainhask.Parser (Op(..), Program, parseBF) where
+module Brainhask.Parser (parseBF) where
 
 import Brainhask.Types
 import Control.Applicative hiding (optional)
