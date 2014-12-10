@@ -1,3 +1,6 @@
+{-# LANGUAGE BangPatterns #-}
+
+
 module Brainhask.Interpreter (interpretBF) where
 
 import Control.Applicative
@@ -7,35 +10,41 @@ import Control.Monad.Trans.State
 import Data.ByteString.Internal
 import Data.Tape
 import Data.Word (Word8)
-import Brainhask.Parser
+import Brainhask.Optimizer
+import Brainhask.Types
 
 type Memory = Tape Word8
 
 initialMemory :: Memory
 initialMemory = tapeOf 0
 
-interpretOp :: Op -> StateT Memory IO ()
-interpretOp MoveR = modify moveRight
-interpretOp MoveL = modify moveLeft
-interpretOp Inc   = modify $ modifyCursor ( 1 +)
-interpretOp Dec   = modify $ modifyCursor (-1 +)
+interpretOp :: Op Int -> StateT Memory IO ()
+interpretOp NoOp = return ()
 
-interpretOp Put   = do
+interpretOp !(Move   0) = return ()
+interpretOp !(Move   n) = modify $! moveRight n
+interpretOp !(Modify n) = modify $! modifyCursor $ \x ->  fromIntegral n  + x  :: Word8
+interpretOp !(Set    n) = modify $! replaceCursor $ fromIntegral n
+interpretOp !(Put 0) = return ()
+interpretOp !(Put n) = do
     c <- _cursor <$> get
-    liftIO $ putChar (w2c c)
+    liftIO $ putStr $ replicate n (w2c c)
 
-interpretOp Get   = do
-    liftIO $
+interpretOp !(Get 0) = return ()
+interpretOp !(Get 1) = do
     c <- liftIO $ putStr "\n> " >> getChar
     liftIO $ putStrLn ""
-    modify $ replaceCursor $ c2w c
+    modify $! replaceCursor $! c2w c
 
-interpretOp (Loop ops) = do
+interpretOp !(Get _) = interpretOp (Get 1)
+
+interpretOp !(Loop []) = return ()
+interpretOp !(Loop ops) = do
     m <- get
-    when (_cursor m /= 0) $ interpret (ops ++ [Loop ops])
+    when (_cursor m /= 0) $! interpret (ops ++ [Loop ops])
 
-interpret :: Program -> StateT Memory IO ()
+interpret :: Program Int -> StateT Memory IO ()
 interpret = mapM_ interpretOp
 
-interpretBF :: Program -> IO ()
+interpretBF :: Program Int -> IO ()
 interpretBF = void . flip execStateT initialMemory . interpret
