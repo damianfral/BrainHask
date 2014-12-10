@@ -1,4 +1,4 @@
-module Brainhask.Optimizer where
+module Brainhask.Optimizer (optimize) where
 
 import Brainhask.Types
 import Control.Applicative hiding (many)
