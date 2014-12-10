@@ -1,18 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE LambdaCase #-}
-
 module Brainhask.Optimizer where
 
 import Brainhask.Types
 import Control.Applicative hiding (many)
-import Control.Monad
-import Data.Data
-import Data.Functor
 import Data.Monoid
-import Data.List
 import Data.Transformer
-import Data.Typeable
 
 ffmap  = fmap . fmap
 sumOps = getSum . extract . ffmap Sum
@@ -37,5 +28,8 @@ optimizeLoops opts = do
     (Loop ops) <- matchConstructor (Loop [])
     return $ Loop $ mtransform opts ops
 
+allOpt :: [BFTransformer]
 allOpt = [reduceModifies, reduceMoves, optimizeLoops allOpt, removeModifies0, removeMoves0, reduceLoops]
+
+optimize :: Program Int -> Program Int
 optimize = filter (/= NoOp) . mtransform allOpt

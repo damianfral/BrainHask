@@ -1,6 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
 
-
 module Brainhask.Interpreter (interpretBF) where
 
 import Control.Applicative
@@ -10,7 +9,6 @@ import Control.Monad.Trans.State
 import Data.ByteString.Internal
 import Data.Tape
 import Data.Word (Word8)
-import Brainhask.Optimizer
 import Brainhask.Types
 
 type Memory = Tape Word8
@@ -23,12 +21,12 @@ interpretOp NoOp = return ()
 
 interpretOp !(Move   0) = return ()
 interpretOp !(Move   n) = modify $! moveRight n
-interpretOp !(Modify n) = modify $! modifyCursor $ \x ->  fromIntegral n  + x  :: Word8
-interpretOp !(Set    n) = modify $! replaceCursor $ fromIntegral n
+interpretOp !(Modify n) = modify $! modifyCursor  $! \x ->  fromIntegral n  + x
+interpretOp !(Set    n) = modify $! replaceCursor $! fromIntegral n
 interpretOp !(Put 0) = return ()
 interpretOp !(Put n) = do
     c <- _cursor <$> get
-    liftIO $ putStr $ replicate n (w2c c)
+    liftIO $ putStr $! replicate n (w2c c)
 
 interpretOp !(Get 0) = return ()
 interpretOp !(Get 1) = do

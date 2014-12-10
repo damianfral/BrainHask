@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
 
@@ -7,7 +6,6 @@ module Data.Transformer where
 import Control.Applicative hiding (many)
 import Control.Monad
 import Data.Data
-
 
 data Transformer a b = Transformer { runT :: [a] -> Maybe (b, [a])} deriving (Functor)
 

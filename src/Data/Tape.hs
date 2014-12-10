@@ -6,8 +6,6 @@ module Data.Tape
     , moveLeft, moveRight
     , modifyCursor, replaceCursor) where
 
-import Data.List
-
 data Tape a = Tape {_left :: ![a], _cursor :: !a, _right :: ![a]}
 
 tapeOf :: a -> Tape a
