@@ -18,7 +18,7 @@ decParser   = Modify . negate . length <$> many1 (string "-" )
 putParser   = Put    . length          <$> many1 (string "." )
 getParser   = Get    . length          <$> many1 (string "," )
 loopParser  = between (string "[") (string "]") $ Loop <$> programParser
-noopParser  = many (noneOf "<>,.+-[]") *> pure (NoOp)
+noopParser  = many (noneOf "<>,.+-[]") *> pure NoOp
 
 clean :: String -> String
 clean = filter (`elem` "+-<>[].,")
