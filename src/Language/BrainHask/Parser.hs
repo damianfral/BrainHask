@@ -12,10 +12,9 @@ howMany1 xs = length <$> many1 (string  xs)
 programParser :: Parser (BFProgram Int)
 programParser = many opParser
 
-noopParser, opParser, rightParser, leftParser, incParser, decParser, putParser, getParser, loopParser :: Parser (Op Int)
+opParser, rightParser, leftParser, incParser, decParser, putParser, getParser, loopParser :: Parser (Op Int)
 
 opParser    = choice [ rightParser, leftParser, incParser, decParser, putParser, getParser, loopParser ]
-noopParser  = many (noneOf "<>,.+-[]") *> pure NoOp
 rightParser = Move            <$> howMany1 ">"
 leftParser  = Move   . negate <$> howMany1 "<"
 incParser   = Add             <$> howMany1 "+"

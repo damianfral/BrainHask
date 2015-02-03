@@ -1,52 +1,48 @@
 {-# LANGUAGE LambdaCase, OverloadedStrings, DeriveFunctor, DeriveDataTypeable #-}
 
-module Language.BrainHask.Interpreter (interpretBF) where
+module Language.BrainHask.Interpreter ( MachineMemory, MachineIO(..), Machine(..), MachineM, interpretBF) where
 
 import Control.Applicative
-import Control.Arrow
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.RWS
-import Data.ByteString.Internal
 import Data.Tape
 import Data.Word (Word8)
 import Language.BrainHask.Types
 import Pipes
 
-type Memory    = Tape Word8
-data MachineIO = MachineIO { _read :: IO Int, _write :: Int -> IO () }
-type Machine   = RWST MachineIO () Memory IO
+type MachineMemory = Tape Word8
+data MachineIO     = MachineIO { _read :: IO Word8, _write :: [Word8] -> IO () }
+data Machine       = Machine MachineMemory MachineIO
 
-initialMemory :: Memory
-initialMemory = tapeOf 0
+type MachineM      = RWST MachineIO () MachineMemory IO
 
-interpretOpIO :: Op Int -> Producer (Op Int) Machine ()
+interpretOpIO :: Op Int -> Producer (Op Int) MachineM ()
 interpretOpIO (Get n) = when (n > 0) $ do
-    (MachineIO read write) <- lift ask
-    c <- liftIO $ putStr "\n> " >> getChar
-    yield . Set . fromIntegral . c2w $ c
+    (MachineIO read' _) <- lift ask
+    c <- liftIO read'
+    yield $ Set $ fromIntegral c
 
 interpretOpIO (Put n) = when (n > 0) $ do
+    (MachineIO _ write') <- lift ask
     c <- lift $ _cursor <$> get
-    liftIO $ putStr $ replicate n $ w2c c
+    liftIO $ write' $ replicate n c
 
 interpretOpIO c = yield c
 
-interpretMemoryOp :: Op Int -> Effect Machine ()
-interpretMemoryOp NoOp       = return ()
-interpretMemoryOp (Move   n) = lift . modify $! moveRight n
-interpretMemoryOp (Add    n) = lift . modify $! modifyCursor  $ (+) (fromIntegral n)
-interpretMemoryOp (Set    n) = lift . modify $! replaceCursor $ fromIntegral n
-interpretMemoryOp (Loop  []) = return ()
-interpretMemoryOp (Loop ops) = do
+interpretTapeOp :: Op Int -> Effect MachineM ()
+interpretTapeOp NoOp       = return ()
+interpretTapeOp (Move   n) = lift . modify $! moveRight n
+interpretTapeOp (Add    n) = lift . modify $! modifyCursor  $ (+) (fromIntegral n)
+interpretTapeOp (Set    n) = lift . modify $! replaceCursor $ fromIntegral n
+interpretTapeOp (Loop  []) = return ()
+interpretTapeOp (Loop ops) = do
     c <- _cursor <$> lift get
     when (c /= 0) $! interpret (ops ++ [Loop ops])
-interpretMemoryOp _          = return ()
+interpretTapeOp _          = return ()
 
-interpret :: BFProgram Int -> Effect Machine ()
-interpret program = for (mapM_ interpretOpIO program) interpretMemoryOp
+interpret :: BFProgram Int -> Effect MachineM ()
+interpret program = for (mapM_ interpretOpIO program) interpretTapeOp
 
-interpretBF :: BFProgram Int -> IO ()
-interpretBF = void . (\x -> runRWST x machineIO initialMemory) . runEffect . interpret
-    where
-        machineIO = MachineIO (fromIntegral . c2w <$> getChar) (putStr . show)
+interpretBF :: Machine -> BFProgram Int -> IO ()
+interpretBF (Machine mMemory mIO) = void . (\x -> runRWST x mIO mMemory) . runEffect . interpret
