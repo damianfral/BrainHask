@@ -1,13 +1,17 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings, DeriveFunctor, DeriveDataTypeable #-}
 
 module Main where
 
-import Brainhask.Interpreter
-import Brainhask.Parser
-import Brainhask.Optimizer
+import Language.BrainHask.Interpreter
+import Language.BrainHask.Optimizer
+import Language.BrainHask.Parser
+import Control.Monad
+import Data.Either.Combinators
 import Options.Applicative
 import System.Directory
 import System.IO
+import Control.Concurrent
+import Pipes
 
 data Options = Options
     { _file     :: String
@@ -20,18 +24,21 @@ options = Options
     <*> switch (short 'o' <> long "optimize" <> help "Try to optimize")
     <*> switch (short 'a' <> long "ast"      <> help "Print the AST")
 
+readInput :: FilePath -> IO (Maybe String)
+readInput fn = doesFileExist fn >>= \b ->
+    if b then Just <$> readFile fn
+    else      return Nothing
+
 processOptions :: Options -> IO ()
-processOptions (Options f o a) = do
-    fileExists <- doesFileExist f
-    if (not fileExists) then putStrLn (f ++ " does not exist.") >> return () else
-        readFile f >>= return . parseBF >>= \case
-            Left errorMsg -> print errorMsg
-            Right program -> printASTorRun a $ mayOpt o program
+processOptions (Options fn o a) = go <$> readInput fn >>= writeOutput
     where
-        mayOpt True        = optimize
-        mayOpt _           = id
-        printASTorRun True = print
-        printASTorRun _    = interpretBF
+        go Nothing   = Left $ fn ++ " does not exist"
+        go (Just fc) = mapLeft show $ parseBF fc
+        writeOutput ( Left errorMsg ) = putStrLn errorMsg
+        writeOutput ( Right program ) | o && a      = print       $ optimize program
+                                      | o           = interpretBF $ optimize program
+                                      | a           = print       $ program
+                                      | otherwise   = interpretBF $ program
 
 main :: IO ()
 main = do
@@ -39,5 +46,6 @@ main = do
     hSetBuffering stdout NoBuffering
     execParser opts >>= processOptions
     putStrLn ""
-    where
-        opts = info (helper <*> options) ( fullDesc <> progDesc "Brainfuck interpreter")
+        where
+            opts = info ( helper <*> options )
+                        ( fullDesc <> progDesc "Brainfuck interpreter" )
