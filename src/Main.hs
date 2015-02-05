@@ -1,16 +1,20 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFunctor      #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 module Main where
 
-import Brainhask.Interpreter
-import Brainhask.Parser
-import Brainhask.Optimizer
-import Options.Applicative
-import System.Directory
-import System.IO
+import           Data.ByteString.Internal
+import           Data.Either.Combinators
+import           Data.Tape
+import           Language.BrainHask
+import           Options.Applicative
+import           System.Directory
+import           System.IO
 
 data Options = Options
-    { _file     :: String
+    { _input    :: String
     , _optimize :: Bool
     , _ast      :: Bool }
 
@@ -20,24 +24,33 @@ options = Options
     <*> switch (short 'o' <> long "optimize" <> help "Try to optimize")
     <*> switch (short 'a' <> long "ast"      <> help "Print the AST")
 
-processOptions :: Options -> IO ()
-processOptions (Options f o a) = do
-    fileExists <- doesFileExist f
-    if (not fileExists) then putStrLn (f ++ " does not exist.") >> return () else
-        readFile f >>= return . parseBF >>= \case
-            Left errorMsg -> print errorMsg
-            Right program -> printASTorRun a $ mayOpt o program
+readInput :: FilePath -> IO (Either String String)
+readInput fn = doesFileExist fn >>= \b ->
+    if b then     Right <$> readFile fn
+    else return $ Left $ fn ++ " does not exist"
+
+initMachine :: IO Machine
+initMachine = do
+    hSetBuffering stdin  NoBuffering
+    hSetBuffering stdout NoBuffering
+    return $ Machine machineMemory machineIO
     where
-        mayOpt True        = optimize
-        mayOpt _           = id
-        printASTorRun True = print
-        printASTorRun _    = interpretBF
+        machineMemory = tapeOf 0
+        machineIO     = MachineIO (putStr "\n> " >> (c2w <$> getChar)) (putStr . map w2c)
 
 main :: IO ()
 main = do
-    hSetBuffering stdin  NoBuffering
-    hSetBuffering stdout NoBuffering
-    execParser opts >>= processOptions
-    putStrLn ""
-    where
-        opts = info (helper <*> options) ( fullDesc <> progDesc "Brainfuck interpreter")
+    (Options input o a) <- execParser opts
+    machine <- initMachine
+    string  <- readInput input
+    let program = string >>= mapLeft show . parseBF
+    go o a machine program
+        where
+            opts = info ( helper <*> options )
+                        ( fullDesc <> progDesc "Brainfuck interpreter" )
+            go _ _ (Machine _ (MachineIO _ wf)) ( Left errorMsg ) = wf $ map c2w errorMsg
+            go o a machine@(Machine _ (MachineIO _ wf)) ( Right program )
+                | o && a      = wf . map c2w . show $ optimize program
+                | o           = interpretBF machine $ optimize program
+                | a           = wf . map c2w . show $ program
+                | otherwise   = interpretBF machine program
