@@ -30,7 +30,7 @@ library
 
 executable brainhask
     main-is:              Main.hs
-    build-depends:        base >=4.6, text, either, transformers, parsec, pipes, brainhask, bytestring, directory, optparse-applicative
+    build-depends:        base >=4.6, ghcjs-base, text, either, transformers, parsec, pipes, brainhask, bytestring, directory, optparse-applicative
     hs-source-dirs:       src
     ghc-options:          -Wall -O2 -optc-O2 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
     default-language:     Haskell2010
