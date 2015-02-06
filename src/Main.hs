@@ -61,7 +61,7 @@ select = jq_select . toJSString
 
 onClick :: JQuery -> IO () -> IO ()
 onClick jq io = do
-    cb <- syncCallback NeverRetain False io
+    cb <- asyncCallback NeverRetain io
     jq_onClick jq cb
 
 getVal :: JQuery -> IO String
@@ -96,10 +96,9 @@ astClick = runOptions (Options "#input" True True)
 
 main :: IO ()
 main = do
-    runB <- select "#run"
-    astB <- select "#ast"
-    onClick runB runClick
-    onClick astB astClick
+    select "#run"   >>= flip onClick runClick
+    select "#ast"   >>= flip onClick astClick
+    select "#clear" >>= flip onClick (select "#output" >>= flip setVal "")
 
 #else
 
