@@ -1,12 +1,7 @@
-module Language.BrainHask
-    ( module Language.BrainHask.Interpreter
-    , module Language.BrainHask.Optimizer
-    , module Language.BrainHask.Parser
-    , module Language.BrainHask.Types )
+module Language.BrainHask (module X) where
 
-where
-
-import Language.BrainHask.Interpreter
-import Language.BrainHask.Optimizer
-import Language.BrainHask.Parser
-import Language.BrainHask.Types
+import           Language.BrainHask.Interpreter as X
+import           Language.BrainHask.Optimizer   as X
+import           Language.BrainHask.Preprocessor   as X
+import           Language.BrainHask.Parser      as X
+import           Language.BrainHask.Types       as X

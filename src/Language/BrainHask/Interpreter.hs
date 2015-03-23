@@ -1,55 +1,76 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFunctor      #-}
-{-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 
-module Language.BrainHask.Interpreter ( MachineMemory, MachineIO(..), Machine(..), MachineM, interpretBF) where
+module Language.BrainHask.Interpreter ( MachineMemory, MachineM, interpretBF) where
 
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class
-import           Control.Monad.Trans.RWS
+import           Control.Monad.Trans.State.Strict
 import           Data.Tape
-import           Data.Word                (Word8)
+import           Data.ByteString.Internal
+import           Data.Word                          (Word8)
 import           Language.BrainHask.Types
+import           Pipes
+import           Pipes.Lift
+import           Pipes.Prelude                      as P
 
 type MachineMemory = Tape Word8
-data MachineIO     = MachineIO { _read :: IO Word8, _write :: [Word8] -> IO () }
-data Machine       = Machine MachineMemory MachineIO
+type MachineM r    = (Monad m) => Pipe Word8 Word8 (StateT MachineMemory m) r
 
-type MachineM      = RWST MachineIO () MachineMemory IO
+printOp :: ILOp Int Int -> MachineM (ILOp Int Int)
+printOp x = do
+    yieldOp x
+    yield $ c2w '\n'
+    return x
+    where
+        yieldOp (ILLoop x) = mapM_ yield $ Prelude.map c2w "Loop"
+        yieldOp x = mapM_ yield $ Prelude.map (c2w) $ Prelude.show x
 
-interpretOpIO :: Op Int -> MachineM (Op Int)
-interpretOpIO (Get n)
-    | n <= 0    = return NoOp
+interpretOpIO :: ILOp Int Int -> MachineM (ILOp Int Int)
+interpretOpIO (ILRead) = do
+        c <- await
+        return $ ILSet $ fromIntegral c
+
+interpretOpIO (ILWrite n)
+    | n <= 0    = return ILNoOp
     | otherwise = do
-        (MachineIO read' _) <- ask
-        c <- liftIO read'
-        return $ Set $ fromIntegral c
-
-interpretOpIO (Put n)
-    | n <= 0    = return NoOp
-    | otherwise = do
-        (MachineIO _ write') <- ask
-        c <- _cursor <$> get
-        liftIO $ write' $ replicate n c
-        return NoOp
+        c <- getCursor <$> lift get
+        replicateM_ n $ yield c
+        -- mapM_ (yield . c2w ) "WriteOP"
+        return ILNoOp
 
 interpretOpIO c = return c
 
-interpretTapeOp :: Op Int -> MachineM ()
-interpretTapeOp NoOp       = return ()
-interpretTapeOp (Move   n) = modify $! moveRight n
-interpretTapeOp (Add    n) = modify $! modifyCursor  $ (+) (fromIntegral n)
-interpretTapeOp (Set    n) = modify $! replaceCursor $ fromIntegral n
-interpretTapeOp (Loop  []) = return ()
-interpretTapeOp (Loop ops) = do
-    c <- _cursor <$> get
-    when (c /= 0) $! interpret (ops ++ [Loop ops])
-interpretTapeOp _          = return ()
+interpretTapeOp :: ILOp Int Int -> MachineM ()
+interpretTapeOp ILNoOp       = return ()
+interpretTapeOp (ILMove   n) = lift $ modify $! moveCursor n
+interpretTapeOp (ILAdd    n) = lift $ modify $! updateCursor  $ (+) (fromIntegral n)
+interpretTapeOp (ILSet    n) = lift $ modify $! replaceCursor $ fromIntegral n
 
-interpret :: BFProgram Int -> MachineM ()
+interpretTapeOp (ILAddMult i n) = do
+    lift $ modify $! \v -> updateCursor (\x -> fromIntegral x + (getIndex i v) * fromIntegral n ) v
+
+interpretTapeOp (ILBlock ops) = interpret ops
+
+interpretTapeOp (ILLoop  []) = return ()
+interpretTapeOp (ILSingleOpLoop i a) = do
+    c <- getCursor . moveCursor i <$> lift get
+    replicateM_ (fromIntegral c) $ interpret [a]
+
+interpretTapeOp (ILLoop ops) = do
+    c <- getCursor <$> lift get
+    when (c /= 0) $! interpret (ops ++ [ILLoop ops])
+
+interpretTapeOp (ILAddTo n) = do
+    c <- getCursor <$> lift get
+    mapM_ interpretTapeOp [ILMove n, ILAdd (fromIntegral c), ILMove (-n)]
+
+interpretTapeOp x          = return ()
+
+interpret :: ILProgram Int -> MachineM ()
 interpret = mapM_ $ interpretOpIO >=> interpretTapeOp
 
-interpretBF :: Machine -> BFProgram Int -> IO ()
-interpretBF (Machine mMemory mIO) = void . (\x -> runRWST x mIO mMemory) . interpret
+interpretBF :: (Monad m) => Producer Word8 m () ->  Consumer Word8 m () -> ILProgram Int -> m ()
+interpretBF inp outp program = runEffect $ inp >-> evalStateP (tapeOf 0) (interpret program) >-> outp

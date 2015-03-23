@@ -1,30 +1,32 @@
 module Data.Tape
-    ( Tape()
-    , _left, _cursor, _right, tapeOf
-    , moveLeft, moveRight
-    , modifyCursor, replaceCursor) where
+    ( Tape(..) , tapeOf      , moveCursor
+    , getCursor, updateCursor, replaceCursor
+    , getIndex , updateIndex , replaceIndex ) where
 
-data Tape a = Tape {_left :: ![a], _cursor :: !a, _right :: ![a]}
+data Tape a = Tape {_left :: [a], _getCursor :: !a, _right :: [a]}
 
 tapeOf :: a -> Tape a
 tapeOf x = Tape (repeat x) x (repeat x)
 
-moveLeft, moveRight :: Int -> Tape a -> Tape a
+getCursor = _getCursor
 
-moveLeft  n t@(Tape ls c rs)  | n < 0  = moveRight (-n) t
-                              | n == 0 = t
-                              | n > 0  = Tape ls' c' rs'
-                                    where (tmp, ls') = splitAt n ls
-                                          (c':rs')   = reverse tmp ++ [c] ++ rs
-
-moveRight n t@(Tape ls c rs)  | n < 0  = moveLeft (-n) t
-                              | n == 0 = t
-                              | n > 0  = Tape ls' c' rs'
-                                    where (tmp, rs') = splitAt n rs
-                                          (c':ls')   = reverse tmp ++ [c] ++ ls
-
-modifyCursor :: (a -> a) -> Tape a -> Tape a
-modifyCursor f (Tape ls x rs) = Tape ls (f x) rs
+moveCursor :: Int -> Tape a -> Tape a
+moveCursor   0  t = t
+moveCursor   1  (Tape (ls) a (r:rs)) = Tape (a:ls) r rs
+moveCursor (-1) (Tape (l:ls) a (rs)) = Tape ls l (a:rs)
+moveCursor  n t@(Tape ls c rs) = foldr1 (.) (replicate (abs n) (moveCursor $ signum n))  t
 
 replaceCursor :: a -> Tape a -> Tape a
-replaceCursor = modifyCursor . const
+replaceCursor a t = t {_getCursor = a}
+
+updateCursor :: (a -> a) -> Tape a -> Tape a
+updateCursor f (Tape l a r) = Tape l (f a) r
+
+getIndex :: Int -> Tape a -> a
+getIndex p = getCursor . (moveCursor p)
+
+replaceIndex :: Int -> a -> Tape a -> Tape a
+replaceIndex p a = moveCursor (-p) . replaceCursor a . moveCursor p
+
+updateIndex :: Int -> (a -> a) -> Tape a -> Tape a
+updateIndex p f = moveCursor (-p) . updateCursor f . moveCursor p

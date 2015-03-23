@@ -61,17 +61,20 @@ many :: Transformer a b -> Transformer a [b]
 many p = many1 p <|> return []
 
 many1 :: Transformer a b -> Transformer a [b]
-many1 p = do { a <- p; as <- many p; return (a:as)}
+many1 p = (:) <$> p <*> many p
 
-transform :: Transformer a b -> [a] -> [b]
-transform _ [] = []
-transform t p@(_:ps) = case runT t p of
-            Nothing    -> transform t ps
-            Just (x,r) -> x : transform t r
+howMany1 :: Transformer a b -> Transformer a Int
+howMany1 p = length <$> many1 p
 
-mtransform :: [Transformer a a] -> [a] -> [a]
-mtransform _ []  = []
-mtransform [] vs = vs
-mtransform (t:ts) p@(p1:ps) = case runT t p of
-            Nothing    -> mtransform ts $ p1 : mtransform [t] ps
-            Just (x,r) -> mtransform ts $  x : mtransform [t] r
+transformOrOmit :: Transformer a b -> [a] -> [b]
+transformOrOmit _ [] = []
+transformOrOmit t inp@(_:inps) = case runT t inp of
+    Nothing    -> transformOrOmit t inps
+    Just (x,r) -> x : transformOrOmit t r
+
+endotransformOrPassthrough :: [Transformer a a] -> [a] -> [a]
+endotransformOrPassthrough _ []  = []
+endotransformOrPassthrough [] vs = vs
+endotransformOrPassthrough ps inp@(i:inps) = case runT (choice ps) inp of
+    Nothing    -> i : endotransformOrPassthrough ps inps
+    Just (x,r) -> x : endotransformOrPassthrough ps r

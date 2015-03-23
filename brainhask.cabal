@@ -2,8 +2,8 @@
 -- For further documentation, see http://haskell.org/cabal/users-guide/
 
 name:                   brainhask
-version:                0.1.0.0
-synopsis:               A brainfuck interperter
+version:                0.2.0.0
+synopsis:               A brainfuck interperter.
 -- description:
 homepage:               http://github.com/danmianfral/brainhask
 license:                MIT
@@ -22,15 +22,25 @@ cabal-version:          >=1.10
 --    location:           http://github.com/danmianfral/brainhask
 
 library
-    exposed-modules:     Language.BrainHask, Language.BrainHask.Types, Language.BrainHask.Parser, Language.BrainHask.Interpreter, Language.BrainHask.Optimizer, Data.Tape, Data.Transformer
-    build-depends:       base >= 4, transformers, parsec, bytestring, transformers, pipes
+    exposed-modules:     Helper, Data.Tape, Data.Transformer, Language.BrainHask, Language.BrainHask.Types, Language.BrainHask.Parser, Language.BrainHask.Interpreter, Language.BrainHask.Optimizer, Language.BrainHask.Preprocessor
+    build-depends:       ghcjs-base, base >= 4, transformers, pipes, free, parsec, bytestring, either, directory, optparse-applicative, vector
     hs-source-dirs:      src
-    ghc-options:         -Wall -O2 -optc-O2 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
+    ghc-options:         -Wall -O3 -optc-O3 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
+    ghcjs-options:       -Wall -O2
     default-language:    Haskell2010
 
 executable brainhask
     main-is:              Main.hs
-    build-depends:        base >=4.6, ghcjs-base, text, either, transformers, parsec, pipes, brainhask, bytestring, directory, optparse-applicative
+    build-depends:        ghcjs-base, base >=4.6, text, either, vector, pipes, transformers, parsec, brainhask, bytestring, directory, optparse-applicative
     hs-source-dirs:       src
-    ghc-options:          -Wall -O2 -optc-O2 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
+    ghc-options:          -Wall -O3 -optc-O3 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
+    ghcjs-options:        -Wall -O2
     default-language:     Haskell2010
+
+benchmark brainhask-bench
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   src
+    main-is:          Benchmark.hs
+    build-depends:    ghcjs-base, base, criterion, random, pipes, vector, transformers, text, either, transformers, parsec, brainhask, bytestring, directory, optparse-applicative
+    ghc-options:      -Wall -O3 -optc-O3 -threaded -rtsopts -auto-all -caf-all -funbox-strict-fields
+    default-language: Haskell2010
