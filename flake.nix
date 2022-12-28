@@ -28,6 +28,19 @@
 
           defaultPackage = packages.brainhask;
 
+          apps = {
+            default = self.apps.brainhask;
+            brainhask = {
+              type = "app";
+              program = "${packages.brainhask}/bin/brainhask";
+            };
+            brainhask-bench = {
+              type = "app";
+              program = "${packages.brainhask}/bin/brainhask-bench";
+            };
+          };
+
+
           devShells.default = pkgs.haskellPackages.shellFor {
             packages = p: [ packages.brainhask ];
             buildInputs = with pkgs; with pkgs.haskellPackages; [

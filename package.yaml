@@ -13,7 +13,9 @@ dependencies:
   - pipes
   - bytestring
   - optparse-applicative
+  - optparse-generic
   - directory
+  - criterion
 
 library:
   source-dirs: ./src/
@@ -22,6 +24,16 @@ executables:
   brainhask:
     main: Main.hs
     source-dirs: ./src/
+    ghc-options:
+      - -rtsopts
+      - -threaded
+      - -with-rtsopts=-N
+
+  brainhask-bench:
+    main: Main.hs
+    source-dirs: ./benchmark/
+    dependencies:
+      - brainhask
     ghc-options:
       - -rtsopts
       - -threaded

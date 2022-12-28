@@ -56,4 +56,4 @@ transform n = foldr1 (.) optList
 optimize :: OptimizationLevel -> ILProgram Int -> ILProgram Int
 optimize O0 = filter (/= ILNoOp)
 optimize O1 = filter (/= ILNoOp) . transform 2
-optimize O2 = filter (/= ILNoOp) . transform 4
+optimize O2 = filter (/= ILNoOp) . transform 1000

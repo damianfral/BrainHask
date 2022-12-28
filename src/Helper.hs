@@ -60,7 +60,7 @@ machineIO = (inp, outp)
       outp
 
 runOptions :: Options Unwrapped -> (Producer Word8 IO (), Consumer Word8 IO ()) -> IO ()
-runOptions (Options input o a) (inp, outp) = do
+runOptions (Options input o ast) (inp, outp) = do
   string <- readInput input
   let program = string >>= mapLeft show . parseBF
   go program
@@ -68,7 +68,7 @@ runOptions (Options input o a) (inp, outp) = do
     go :: Either String BFProgram -> IO ()
     go (Left errorMsg) = runEffect $ each (map c2w errorMsg) >-> outp
     go (Right program)
-      | a = runEffect $ each (map c2w . show $ compile program) >-> outp
+      | ast = runEffect $ each (map c2w . show $ compile program) >-> outp
       | otherwise = void $ interpretBF inp outp $ compile program
       where
         compile = Language.BrainHask.optimize (fromMaybe O0 o) . preprocess
