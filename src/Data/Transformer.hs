@@ -37,8 +37,8 @@ instance Monad (Transformer a) where
     runT (fp2 a) cs'
 
 instance MonadPlus (Transformer a) where
-    mzero = empty
-    mplus = (<|>)
+  mzero = empty
+  mplus = (<|>)
 
 instance MonadFail (Transformer a) where
   fail msg = Transformer $ const Nothing
@@ -77,13 +77,13 @@ howMany1 p = length <$> many1 p
 
 transformOrOmit :: Transformer a b -> [a] -> [b]
 transformOrOmit _ [] = []
-transformOrOmit t inp@(_:inps) = case runT t inp of
-    Nothing    -> transformOrOmit t inps
-    Just (x,r) -> x : transformOrOmit t r
+transformOrOmit t inp@(_ : inps) = case runT t inp of
+  Nothing -> transformOrOmit t inps
+  Just (x, r) -> x : transformOrOmit t r
 
 endotransformOrPassthrough :: [Transformer a a] -> [a] -> [a]
-endotransformOrPassthrough _ []  = []
+endotransformOrPassthrough _ [] = []
 endotransformOrPassthrough [] vs = vs
-endotransformOrPassthrough ps inp@(i:inps) = case runT (choice ps) inp of
-    Nothing    -> i : endotransformOrPassthrough ps inps
-    Just (x,r) -> x : endotransformOrPassthrough ps r
+endotransformOrPassthrough ps inp@(i : inps) = case runT (choice ps) inp of
+  Nothing -> i : endotransformOrPassthrough ps inps
+  Just (x, r) -> x : endotransformOrPassthrough ps r

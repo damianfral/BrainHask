@@ -12,15 +12,21 @@ toOpParser s p = p <$ string s
 programParser :: Parser BFProgram
 programParser = many opParser
 
-opParser, rightParser, leftParser, incParser, decParser, writeParser, readParser, loopParser :: Parser BFOp
-opParser    = choice [ rightParser, leftParser, incParser, decParser, writeParser, readParser, loopParser ]
+opParser = choice [rightParser, leftParser, incParser, decParser, writeParser, readParser, loopParser]
+
 rightParser = toOpParser ">" BFMoveRight
-leftParser  = toOpParser "<" BFMoveLeft
-incParser   = toOpParser "+" BFIncrease
-decParser   = toOpParser "-" BFDecrease
+
+leftParser = toOpParser "<" BFMoveLeft
+
+incParser = toOpParser "+" BFIncrease
+
+decParser = toOpParser "-" BFDecrease
+
 writeParser = toOpParser "." BFWrite
-readParser  = toOpParser "," BFRead
-loopParser  = between (string "[") (string "]") $ BFLoop <$> programParser
+
+readParser = toOpParser "," BFRead
+
+loopParser = between (string "[") (string "]") $ BFLoop <$> programParser
 
 clean :: String -> String
 clean = filter (`elem` "+-<>[].,")
