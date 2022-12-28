@@ -4,29 +4,38 @@
 module Language.BrainHask.Types where
 
 import           Data.Data
-import           Data.Foldable
-import           Data.Monoid
 
-data Op a
-  = NoOp
-  | Move a
-  | Add a
-  | Set a
-  | Loop [Op a]
-  | Get a
-  | Put a
-  deriving (Show, Eq, Functor, Data, Typeable)
+data BFOp   = BFNoOp
+            | BFMoveRight
+            | BFMoveLeft
+            | BFIncrease
+            | BFDecrease
+            | BFRead
+            | BFWrite
+            | BFLoop [BFOp]
+            deriving (Show, Eq, Data, Typeable)
 
-type BFProgram a = [Op a]
+type BFProgram   = [BFOp]
 
-extractOp :: (Monoid a) => Op a -> a
-extractOp (NoOp   ) = mempty
-extractOp (Move x ) = x
-extractOp (Add x  ) = x
-extractOp (Put x  ) = x
-extractOp (Get x  ) = x
-extractOp (Set x  ) = x
-extractOp (Loop x ) = extract x
+data ILOp indexDelta value  = ILNoOp
+            | ILMove           value
+            | ILAdd            value
+            | ILGet indexDelta
+            | ILSet value
+            | ILRead
+            | ILWrite          value
+            | ILLoop         [ILOp indexDelta value]
+            | ILSingleOpLoop indexDelta (ILOp indexDelta value)
+            | ILBlock        [ILOp indexDelta value]
+            | ILAddMult indexDelta value
+            | ILMod     indexDelta indexDelta indexDelta
+            | ILAddTo   indexDelta
+            deriving (Show, Eq, Data, Typeable)
 
-extract :: (Monoid b) => BFProgram b -> b
-extract = foldMap extractOp
+expandBlock :: ILOp a b -> [ILOp a b]
+expandBlock (ILBlock xs) = xs
+expandBlock x            = [x]
+
+expandBlocks = concatMap expandBlock
+
+type ILProgram a = [ILOp Int a]
