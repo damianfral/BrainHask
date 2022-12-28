@@ -35,6 +35,9 @@ instance MonadPlus (Transformer a) where
     mzero = empty
     mplus = (<|>)
 
+instance MonadFail (Transformer a) where
+  fail msg = Transformer $ const Nothing
+
 satisfies :: (a -> Bool) -> Transformer a a
 satisfies f = do
     op <- item
