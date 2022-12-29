@@ -25,6 +25,8 @@ executables:
     main: Main.hs
     source-dirs: ./src/
     ghc-options:
+      - -O2
+      - -funbox-strict-fields
       - -rtsopts
       - -threaded
       - -with-rtsopts=-N
@@ -35,6 +37,8 @@ executables:
     dependencies:
       - brainhask
     ghc-options:
+      - -O2
+      - -funbox-strict-fields
       - -rtsopts
       - -threaded
       - -with-rtsopts=-N
