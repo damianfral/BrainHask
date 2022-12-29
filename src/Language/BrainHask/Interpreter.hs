@@ -34,29 +34,27 @@ printOp x = do
     yieldOp x = mapM_ (yield . c2w) (Prelude.show x)
 
 interpretOpIO :: ILOp Int Int -> MachineM (ILOp Int Int)
-interpretOpIO ILRead = do
-  ILSet . fromIntegral <$> await
+interpretOpIO ILRead = ILSet . fromIntegral <$> await
 interpretOpIO (ILWrite n)
   | n <= 0 = return ILNoOp
   | otherwise = do
       c <- getCursor <$> lift get
       replicateM_ n $ yield c
-      -- mapM_ (yield . c2w ) "WriteOP"
       return ILNoOp
 interpretOpIO c = return c
 
 interpretTapeOp :: ILOp Int Int -> MachineM ()
 interpretTapeOp ILNoOp = return ()
-interpretTapeOp (ILMove n) = lift $ modify $! moveCursor n
-interpretTapeOp (ILAdd n) = lift $ modify $! updateCursor $ (+) (fromIntegral n)
-interpretTapeOp (ILSet n) = lift $ modify $! replaceCursor $ fromIntegral n
-interpretTapeOp (ILAddMult i n) = do
-  lift $ modify (\v -> updateCursor (\x -> fromIntegral x + getIndex i v * fromIntegral n) v)
+interpretTapeOp (ILMove n) = lift $ modify $ moveCursor n
+interpretTapeOp (ILAdd n) = lift $ modify $ updateCursor $ (+) (fromIntegral n)
+interpretTapeOp (ILSet n) = lift $ modify $ replaceCursor $ fromIntegral n
+interpretTapeOp (ILAddMult i n) = lift $ modify $ \v ->
+  updateCursor (\x -> fromIntegral x + getIndex i v * fromIntegral n) v
 interpretTapeOp (ILBlock ops) = interpret ops
 interpretTapeOp (ILLoop []) = return ()
 interpretTapeOp (ILLoop ops) = do
   c <- getCursor <$> lift get
-  when (c /= 0) $! interpret (ops ++ [ILLoop ops])
+  when (c /= 0) $ interpret (ops ++ [ILLoop ops])
 interpretTapeOp (ILAddTo n) = do
   c <- getCursor <$> lift get
   mapM_ interpretTapeOp [ILMove n, ILAdd (fromIntegral c), ILMove (-n)]
@@ -65,5 +63,12 @@ interpretTapeOp x = return ()
 interpret :: ILProgram Int -> MachineM ()
 interpret = mapM_ $ interpretOpIO >=> interpretTapeOp
 
-interpretBF :: (Monad m) => Producer Word8 m () -> Consumer Word8 m () -> ILProgram Int -> m ()
-interpretBF inp outp program = runEffect $ inp >-> evalStateP (tapeOf 0) (interpret program) >-> outp
+interpretBF ::
+  (Monad m) =>
+  Producer Word8 m () ->
+  Consumer Word8 m () ->
+  ILProgram Int ->
+  m ()
+interpretBF inp outp program =
+  runEffect $
+    inp >-> evalStateP (tapeOf 0) (interpret program) >-> outp
