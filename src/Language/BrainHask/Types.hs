@@ -1,4 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StrictData #-}
+{-# LANGUAGE UnboxedSums #-}
+{-# LANGUAGE UnliftedDatatypes #-}
 
 module Language.BrainHask.Types where
 
@@ -26,7 +29,6 @@ data ILOp indexDelta value
   | ILRead
   | ILWrite value
   | ILLoop [ILOp indexDelta value]
-  | ILSingleOpLoop indexDelta (ILOp indexDelta value)
   | ILBlock [ILOp indexDelta value]
   | ILAddMult indexDelta value
   | ILMod indexDelta indexDelta indexDelta

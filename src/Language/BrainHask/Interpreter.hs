@@ -54,9 +54,6 @@ interpretTapeOp (ILAddMult i n) = do
   lift $ modify (\v -> updateCursor (\x -> fromIntegral x + getIndex i v * fromIntegral n) v)
 interpretTapeOp (ILBlock ops) = interpret ops
 interpretTapeOp (ILLoop []) = return ()
-interpretTapeOp (ILSingleOpLoop i a) = do
-  c <- getCursor . moveCursor i <$> lift get
-  replicateM_ (fromIntegral c) $ interpret [a]
 interpretTapeOp (ILLoop ops) = do
   c <- getCursor <$> lift get
   when (c /= 0) $! interpret (ops ++ [ILLoop ops])
