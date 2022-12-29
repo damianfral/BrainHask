@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 module Language.BrainHask.Interpreter
   ( MachineMemory,
     MachineM,
     interpretBF,
+    machineIO,
   )
 where
 
@@ -19,6 +21,7 @@ import Language.BrainHask.Types
 import Pipes
 import Pipes.Lift
 import qualified Pipes.Prelude as P
+import System.IO (hFlush, stdout)
 
 type MachineMemory = Tape Word8
 
@@ -72,3 +75,17 @@ interpretBF ::
 interpretBF inp outp program =
   runEffect $
     inp >-> evalStateP (tapeOf 0) (interpret program) >-> outp
+
+machineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
+machineIO = (inp, outp)
+  where
+    inp = do
+      lift $ putStr "> "
+      x <- c2w <$> lift getChar
+      yield x
+      inp
+    outp = do
+      x <- await
+      lift $ putStr [w2c x]
+      lift $ hFlush stdout
+      outp

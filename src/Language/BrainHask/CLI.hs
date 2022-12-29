@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Helper where
+module Language.BrainHask.CLI where
 
 import Data.ByteString.Internal
 import Data.Either.Combinators
@@ -14,6 +14,7 @@ import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics
 import Language.BrainHask
+import Language.BrainHask.Interpreter
 import Options.Applicative (ReadM)
 import Options.Generic
 import Pipes
@@ -44,20 +45,6 @@ readInput fn =
     if b
       then Right <$> readFile fn
       else return $ Left $ fn ++ " does not exist"
-
-machineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
-machineIO = (inp, outp)
-  where
-    inp = do
-      lift $ putStr "> "
-      x <- c2w <$> lift getChar
-      yield x
-      inp
-    outp = do
-      x <- await
-      lift $ putStr $ replicate 1 $ w2c x
-      lift $ hFlush stdout
-      outp
 
 runOptions :: Options Unwrapped -> (Producer Word8 IO (), Consumer Word8 IO ()) -> IO ()
 runOptions (Options input o ast) (inp, outp) = do

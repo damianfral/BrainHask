@@ -1,5 +1,5 @@
 module Main where
 
-import Helper (runCLI)
+import Language.BrainHask.CLI (runCLI)
 
 main = runCLI
