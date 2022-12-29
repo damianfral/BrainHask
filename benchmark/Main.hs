@@ -42,7 +42,7 @@ loadPrograms filename = do
     Right program ->
       pure $
         [ Program filename optimizationLevel optimizedProgram
-          | optimizationLevel <- [O0, O1, O2],
+          | optimizationLevel <- [O0 .. O3],
             optimizedProgram <- [optimize optimizationLevel $ preprocess program]
         ]
 
