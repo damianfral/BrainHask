@@ -5,6 +5,8 @@ version: 0.0.0.0
 license: MIT
 license-file: LICENSE
 
+extra-source-files: brainfucks/*.bf
+
 dependencies:
   - base
   - parsec
@@ -36,6 +38,9 @@ executables:
     source-dirs: ./benchmark/
     dependencies:
       - brainhask
+      - filepath
+      - file-embed
+      - text
     ghc-options:
       - -O2
       - -funbox-strict-fields

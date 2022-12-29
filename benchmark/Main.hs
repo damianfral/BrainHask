@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -10,14 +11,19 @@ import Criterion.Main
 import Criterion.Types
 import Data.ByteString.Internal
 import Data.Either.Combinators (mapLeft)
+import Data.FileEmbed
 import Data.Functor
 import Data.Tape
+import Data.Text (unpack)
+import Data.Text.Encoding (decodeUtf8With)
+import Data.Text.Encoding.Error (lenientDecode)
 import Data.Word (Word8)
-import Helper hiding (machineIO, optimize)
 import Language.BrainHask
+import Language.BrainHask.CLI hiding (fakeMachineIO, optimize)
 import Language.BrainHask.Optimizer
 import Pipes
 import Pipes.Lift
+import System.FilePath (takeExtension)
 import System.IO
 
 data Program = Program
@@ -26,18 +32,22 @@ data Program = Program
     bfProgram :: ILProgram Int
   }
 
-readAndParse str =
-  ExceptT (readInput str) >>= ExceptT . pure . mapLeft show . parseBF
+parseBS =
+  ExceptT
+    . pure
+    . mapLeft show
+    . parseBF
+    . unpack
+    . decodeUtf8With lenientDecode
 
-brainfuckFiles =
-  mappend "brainfucks/"
-    <$> [ "primes.bf",
-          "triangle.bf"
-        ]
+brainfuckFiles = filter isBrainfuckFile files
+  where
+    files = $(makeRelativeToProject "brainfucks/" >>= embedDir)
+    isBrainfuckFile = (==) ".bf" . takeExtension . fst
 
-loadPrograms :: FilePath -> IO [Program]
-loadPrograms filename = do
-  runExceptT (readAndParse filename) >>= \case
+loadPrograms :: (FilePath, ByteString) -> IO [Program]
+loadPrograms (filename, src) = do
+  runExceptT (parseBS src) >>= \case
     Left e -> throwIO $ userError "error parsing files"
     Right program ->
       pure $
@@ -49,17 +59,19 @@ loadPrograms filename = do
 main :: IO ()
 main = do
   programs <- concat <$> mapM loadPrograms brainfuckFiles
-  defaultMainWith defaultConfig {resamples = 3} $ benchmarkOptimizations <$> programs
+  defaultMainWith config $ benchmarkOptimizations <$> programs
+  where
+    config = defaultConfig {resamples = 3}
 
-machineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
-machineIO = (inp, outp)
+benchMachineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
+benchMachineIO = (inp, outp)
   where
     inp = each (c2w <$> "17\n")
     outp = do
       x <- await
       outp
 
-(inp, outp) = machineIO
+(inp, outp) = benchMachineIO
 
 benchmarkOptimizations :: Program -> Benchmark
 benchmarkOptimizations Program {..} =

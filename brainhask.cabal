@@ -9,13 +9,31 @@ version:                0.0.0.0
 license:                MIT
 license-file:           LICENSE
 build-type:             Simple
+extra-source-files:
+      brainfucks/awib-0.4.bf
+      brainfucks/bench.bf
+      brainfucks/bottles.bf
+      brainfucks/collatz.bf
+      brainfucks/deadcodetest.bf
+      brainfucks/factor.bf
+      brainfucks/fib.bf
+      brainfucks/hanoi.bf
+      brainfucks/helloworld.bf
+      brainfucks/loopremove.bf
+      brainfucks/mandelbrot.bf
+      brainfucks/primes.bf
+      brainfucks/random.bf
+      brainfucks/test.bf
+      brainfucks/triangle.bf
+      brainfucks/twinkle.bf
+      brainfucks/xmas.bf
 
 library
     exposed-modules:
           Data.Tape
           Data.Transformer
-          Helper
           Language.BrainHask
+          Language.BrainHask.CLI
           Language.BrainHask.Interpreter
           Language.BrainHask.Optimizer
           Language.BrainHask.Parser
@@ -44,8 +62,8 @@ executable brainhask
     other-modules:
           Data.Tape
           Data.Transformer
-          Helper
           Language.BrainHask
+          Language.BrainHask.CLI
           Language.BrainHask.Interpreter
           Language.BrainHask.Optimizer
           Language.BrainHask.Parser
@@ -65,7 +83,7 @@ executable brainhask
         , transformers
     hs-source-dirs:
           ./src/
-    ghc-options: -O2 -rtsopts -threaded -with-rtsopts=-N
+    ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
     default-language: Haskell2010
 
 executable brainhask-bench
@@ -74,7 +92,7 @@ executable brainhask-bench
           Paths_brainhask
     hs-source-dirs:
           ./benchmark/
-    ghc-options: -O2 -rtsopts -threaded -with-rtsopts=-N
+    ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
     build-depends:
           base
         , brainhask
@@ -82,9 +100,12 @@ executable brainhask-bench
         , criterion
         , directory
         , either
+        , file-embed
+        , filepath
         , optparse-applicative
         , optparse-generic
         , parsec
         , pipes
+        , text
         , transformers
     default-language: Haskell2010
