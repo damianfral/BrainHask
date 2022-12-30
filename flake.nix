@@ -59,6 +59,7 @@
               cabal-install
               ghcid
               hpack
+              hlint
               yamlfix
             ];
           };
