@@ -6,25 +6,17 @@ module Main where
 
 import Control.Exception (throwIO)
 import Control.Monad
-import Control.Monad.Trans.Except
 import Criterion.Main
 import Criterion.Types
-import Data.Bifunctor (bimap)
 import Data.ByteString.Internal
 import Data.FileEmbed
-import Data.Functor
-import Data.Tape
 import Data.Text (unpack)
 import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Word (Word8)
 import Language.BrainHask
-import Language.BrainHask.CLI hiding (fakeMachineIO, optimize)
-import Language.BrainHask.Optimizer
 import Pipes
-import Pipes.Lift
 import System.FilePath (takeExtension)
-import System.IO
 
 data Program = Program
   { filename :: FilePath,
