@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.BrainHask.Optimizer (optimize, OptimizationLevel (..)) where
@@ -7,11 +8,12 @@ import Control.Applicative
 import Data.Functor
 import Data.List
 import Data.Transformer
+import GHC.Generics (Generic)
 import Language.BrainHask.Types
 
 -------------------------------------------------------------------------------
 
-data OptimizationLevel = O0 | O1 | O2 | O3 deriving (Eq, Show, Enum)
+data OptimizationLevel = O0 | O1 | O2 | O3 deriving (Eq, Show, Enum, Generic)
 
 set0Optimization (ILLoop [ILAdd _]) = ILSet 0
 set0Optimization (ILLoop xs) = ILLoop $ map set0Optimization xs
