@@ -9,8 +9,8 @@ import Control.Monad
 import Control.Monad.Trans.Except
 import Criterion.Main
 import Criterion.Types
+import Data.Bifunctor (bimap)
 import Data.ByteString.Internal
-import Data.Either.Combinators (mapLeft)
 import Data.FileEmbed
 import Data.Functor
 import Data.Tape
@@ -33,9 +33,7 @@ data Program = Program
   }
 
 parseBS =
-  ExceptT
-    . pure
-    . mapLeft show
+  either (throwIO . userError . show) pure
     . parseBF
     . unpack
     . decodeUtf8With lenientDecode
@@ -47,34 +45,30 @@ brainfuckFiles = filter isBrainfuckFile files
 
 loadPrograms :: (FilePath, ByteString) -> IO [Program]
 loadPrograms (filename, src) = do
-  runExceptT (parseBS src) >>= \case
-    Left e -> throwIO $ userError "error parsing files"
-    Right program ->
-      pure $
-        [ Program filename optimizationLevel optimizedProgram
-          | optimizationLevel <- [O0 .. O3],
-            optimizedProgram <- [optimize optimizationLevel $ preprocess program]
-        ]
+  program <- parseBS src
+  pure $
+    [ Program filename optimizationLevel optimizedProgram
+      | optimizationLevel <- [O0 .. O3],
+        optimizedProgram <- [optimize optimizationLevel $ preprocess program]
+    ]
 
 main :: IO ()
 main = do
   programs <- concat <$> mapM loadPrograms brainfuckFiles
-  defaultMainWith config $ benchmarkOptimizations <$> programs
+  defaultMainWith config $ benchmarkProgram <$> programs
   where
-    config = defaultConfig {resamples = 3}
+    config = defaultConfig {resamples = 5}
 
 benchMachineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
 benchMachineIO = (inp, outp)
   where
-    inp = each (c2w <$> "17\n")
-    outp = do
-      x <- await
-      outp
+    inp = each (c2w <$> "14\n")
+    outp = await >> outp
 
 (inp, outp) = benchMachineIO
 
-benchmarkOptimizations :: Program -> Benchmark
-benchmarkOptimizations Program {..} =
+benchmarkProgram :: Program -> Benchmark
+benchmarkProgram Program {..} =
   bgroup
     filename
     [ bench (show optimizationLevel) $
