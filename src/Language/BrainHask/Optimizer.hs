@@ -3,13 +3,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.BrainHask.Optimizer (optimize, OptimizationLevel (..)) where
-
-import Control.Applicative
-import Data.Functor
-import Data.List
-import Data.Transformer
-import GHC.Generics (Generic)
 import Language.BrainHask.Types
+import GHC.Generics (Generic)
+import Data.List (intersperse)
 
 -------------------------------------------------------------------------------
 

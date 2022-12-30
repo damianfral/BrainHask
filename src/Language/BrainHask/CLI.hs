@@ -9,17 +9,14 @@ module Language.BrainHask.CLI where
 import Data.ByteString.Internal
 import Data.Either.Combinators
 import Data.Functor
-import Data.Maybe (fromMaybe)
 import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import GHC.Generics
 import Language.BrainHask
-import Language.BrainHask.Interpreter
 import Options.Applicative (ReadM)
 import Options.Generic
 import Pipes
 import System.Directory
-import System.IO
 import Text.Pretty.Simple (pPrint)
 
 newtype File = File FilePath
@@ -37,18 +34,18 @@ data Options w = Options
       w
         ::: File
         <?> "brainfuck file"
-        <#> "i",
+          <#> "i",
     optimize ::
       w
         ::: OptimizationLevel
         <?> "optimization level (0|1|2)"
-        <#> "o"
-        <!> "3",
+          <#> "o"
+            <!> "3",
     ast ::
       w
         ::: Bool
         <?> "print the abstract syntax tree"
-        <#> "a"
+          <#> "a"
   }
   deriving (Generic, Typeable)
 
@@ -88,6 +85,7 @@ runOptions (Options (File input) o ast) (inp, outp) = do
       where
         compile = Language.BrainHask.optimize o . preprocess
 
+runCLI :: IO ()
 runCLI = do
   options <- unwrapRecord "brainhask - a brainfuck interpreter"
   runOptions options machineIO

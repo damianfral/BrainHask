@@ -9,9 +9,7 @@ module Language.BrainHask.Interpreter
   )
 where
 
-import Control.Applicative
 import Control.Monad (replicateM_, when, (>=>))
-import Control.Monad.IO.Class
 import Control.Monad.Trans.State.Strict
 import Data.ByteString.Internal
 import Data.Tape
@@ -19,21 +17,11 @@ import Data.Word (Word8)
 import Language.BrainHask.Types
 import Pipes
 import Pipes.Lift
-import qualified Pipes.Prelude as P
 import System.IO (hFlush, stdout)
 
 type MachineMemory = Tape Word8
 
 type MachineM r = forall m. (Monad m) => Pipe Word8 Word8 (StateT MachineMemory m) r
-
-printOp :: ILOp Int Int -> MachineM (ILOp Int Int)
-printOp x = do
-  yieldOp x
-  yield $ c2w '\n'
-  pure x
-  where
-    yieldOp (ILLoop x) = mapM_ (yield . c2w) ("Loop" :: String)
-    yieldOp x = mapM_ (yield . c2w) (Prelude.show x)
 
 interpretOpIO :: ILOp Int Int -> MachineM (ILOp Int Int)
 interpretOpIO ILRead = ILSet . fromIntegral <$> await
@@ -60,7 +48,7 @@ interpretTapeOp (ILLoop ops) = do
 interpretTapeOp (ILAddTo n) = do
   c <- getCursor <$> lift get
   mapM_ interpretTapeOp [ILMove n, ILAdd (fromIntegral c), ILMove (-n)]
-interpretTapeOp x = pure ()
+interpretTapeOp _ = pure ()
 
 interpret :: ILProgram Int -> MachineM ()
 interpret = mapM_ $ interpretOpIO >=> interpretTapeOp
