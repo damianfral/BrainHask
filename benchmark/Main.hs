@@ -62,7 +62,7 @@ main = do
 benchMachineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
 benchMachineIO = (inp, outp)
   where
-    inp = each (c2w <$> "14\n")
+    inp = each (c2w <$> "23\n")
     outp = await >> outp
 
 (inp, outp) = benchMachineIO
