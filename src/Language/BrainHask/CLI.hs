@@ -61,9 +61,9 @@ instance ParseField OptimizationLevel where
     readField >>= parseStr
     where
       parseStr :: Int -> ReadM OptimizationLevel
-      parseStr 1 = return O1
-      parseStr 2 = return O2
-      parseStr _ = return O0
+      parseStr 1 = pure O1
+      parseStr 2 = pure O2
+      parseStr _ = pure O0
 
 instance ParseRecord (Options Wrapped)
 
@@ -72,7 +72,7 @@ readInput fn =
   doesFileExist fn >>= \b ->
     if b
       then Right <$> readFile fn
-      else return $ Left $ fn ++ " does not exist"
+      else pure $ Left $ fn ++ " does not exist"
 
 runOptions :: Options Unwrapped -> (Producer Word8 IO (), Consumer Word8 IO ()) -> IO ()
 runOptions (Options (File input) o ast) (inp, outp) = do

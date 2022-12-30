@@ -30,7 +30,7 @@ printOp :: ILOp Int Int -> MachineM (ILOp Int Int)
 printOp x = do
   yieldOp x
   yield $ c2w '\n'
-  return x
+  pure x
   where
     yieldOp (ILLoop x) = mapM_ (yield . c2w) ("Loop" :: String)
     yieldOp x = mapM_ (yield . c2w) (Prelude.show x)
@@ -38,29 +38,29 @@ printOp x = do
 interpretOpIO :: ILOp Int Int -> MachineM (ILOp Int Int)
 interpretOpIO ILRead = ILSet . fromIntegral <$> await
 interpretOpIO (ILWrite n)
-  | n <= 0 = return ILNoOp
+  | n <= 0 = pure ILNoOp
   | otherwise = do
       c <- getCursor <$> lift get
       replicateM_ n $ yield c
-      return ILNoOp
-interpretOpIO c = return c
+      pure ILNoOp
+interpretOpIO c = pure c
 
 interpretTapeOp :: ILOp Int Int -> MachineM ()
-interpretTapeOp ILNoOp = return ()
+interpretTapeOp ILNoOp = pure ()
 interpretTapeOp (ILMove n) = lift $ modify $ moveCursor n
 interpretTapeOp (ILAdd n) = lift $ modify $ updateCursor $ (+) (fromIntegral n)
 interpretTapeOp (ILSet n) = lift $ modify $ replaceCursor $ fromIntegral n
 interpretTapeOp (ILAddMult i n) = lift $ modify $ \v ->
   updateCursor (\x -> fromIntegral x + getIndex i v * fromIntegral n) v
 interpretTapeOp (ILBlock ops) = interpret ops
-interpretTapeOp (ILLoop []) = return ()
+interpretTapeOp (ILLoop []) = pure ()
 interpretTapeOp (ILLoop ops) = do
   c <- getCursor <$> lift get
   when (c /= 0) $ interpret (ops ++ [ILLoop ops])
 interpretTapeOp (ILAddTo n) = do
   c <- getCursor <$> lift get
   mapM_ interpretTapeOp [ILMove n, ILAdd (fromIntegral c), ILMove (-n)]
-interpretTapeOp x = return ()
+interpretTapeOp x = pure ()
 
 interpret :: ILProgram Int -> MachineM ()
 interpret = mapM_ $ interpretOpIO >=> interpretTapeOp

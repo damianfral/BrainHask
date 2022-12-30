@@ -25,7 +25,7 @@ addTransformer =
     ]
 loopTransformer = do
   (BFLoop ops) <- matchConstructor (BFLoop [])
-  return $ ILLoop (preprocess ops)
+  pure $ ILLoop (preprocess ops)
 readTransformer = matchConstructor BFRead $> ILRead
 writeTransformer = ILWrite <$> howMany1 (matchConstructor BFWrite)
 

@@ -31,7 +31,6 @@ instance Alternative (Transformer a) where
   p <|> q = Transformer (\s -> runT p s <|> runT q s)
 
 instance Monad (Transformer a) where
-  return = pure
   p1 >>= fp2 = Transformer $ \cs -> do
     (a, cs') <- runT p1 cs
     runT (fp2 a) cs'
@@ -46,7 +45,7 @@ instance MonadFail (Transformer a) where
 satisfies :: (a -> Bool) -> Transformer a a
 satisfies f = do
   op <- item
-  if f op then return op else Transformer $ const Nothing
+  if f op then pure op else Transformer $ const Nothing
 
 sameConstr :: (Data a, Data b) => a -> b -> Bool
 sameConstr a b = toConstr a == toConstr b
@@ -67,7 +66,7 @@ matchConstructor :: (Data a) => a -> Transformer a a
 matchConstructor a = satisfies (sameConstr a)
 
 many :: Transformer a b -> Transformer a [b]
-many p = many1 p <|> return []
+many p = many1 p <|> pure []
 
 many1 :: Transformer a b -> Transformer a [b]
 many1 p = (:) <$> p <*> many p
