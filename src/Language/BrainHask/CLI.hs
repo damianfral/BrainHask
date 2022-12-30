@@ -25,7 +25,8 @@ newtype File = File FilePath
 
 instance ParseRecord File
 
-instance ParseFields File
+instance ParseFields File where
+  parseFields a b c d = File <$> parseFields a b c d
 
 instance ParseField File where
   readField = File <$> readField
