@@ -4,108 +4,104 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:                   brainhask
-version:                0.0.0.0
-license:                MIT
-license-file:           LICENSE
-build-type:             Simple
+name:           brainhask
+version:        0.0.0.0
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
 extra-source-files:
-      brainfucks/awib-0.4.bf
-      brainfucks/bench.bf
-      brainfucks/bottles.bf
-      brainfucks/collatz.bf
-      brainfucks/deadcodetest.bf
-      brainfucks/factor.bf
-      brainfucks/fib.bf
-      brainfucks/hanoi.bf
-      brainfucks/helloworld.bf
-      brainfucks/loopremove.bf
-      brainfucks/mandelbrot.bf
-      brainfucks/primes.bf
-      brainfucks/random.bf
-      brainfucks/test.bf
-      brainfucks/triangle.bf
-      brainfucks/twinkle.bf
-      brainfucks/xmas.bf
+    brainfucks/awib-0.4.bf
+    brainfucks/bench.bf
+    brainfucks/bottles.bf
+    brainfucks/collatz.bf
+    brainfucks/factor.bf
+    brainfucks/hanoi.bf
+    brainfucks/primes.bf
+    brainfucks/random.bf
+    brainfucks/triangle.bf
+    brainfucks/twinkle.bf
 
 library
-    exposed-modules:
-          Data.Tape
-          Data.Transformer
-          Language.BrainHask
-          Language.BrainHask.CLI
-          Language.BrainHask.Interpreter
-          Language.BrainHask.Optimizer
-          Language.BrainHask.Parser
-          Language.BrainHask.Preprocessor
-          Language.BrainHask.Types
-          Main
-    other-modules:
-          Paths_brainhask
-    build-depends:
-          base
-        , bytestring
-        , criterion
-        , directory
-        , either
-        , optparse-applicative
-        , optparse-generic
-        , parsec
-        , pipes
-        , transformers
-    hs-source-dirs:
-          ./src/
-    default-language: Haskell2010
+  exposed-modules:
+      Data.Tape
+      Data.Transformer
+      Language.BrainHask
+      Language.BrainHask.CLI
+      Language.BrainHask.Interpreter
+      Language.BrainHask.Optimizer
+      Language.BrainHask.Parser
+      Language.BrainHask.Preprocessor
+      Language.BrainHask.Types
+      Main
+  other-modules:
+      Paths_brainhask
+  hs-source-dirs:
+      ./src/
+  build-depends:
+      base
+    , bytestring
+    , criterion
+    , directory
+    , either
+    , optparse-applicative
+    , optparse-generic
+    , parsec
+    , pipes
+    , pretty-simple
+    , transformers
+  default-language: Haskell2010
 
 executable brainhask
-    main-is: Main.hs
-    other-modules:
-          Data.Tape
-          Data.Transformer
-          Language.BrainHask
-          Language.BrainHask.CLI
-          Language.BrainHask.Interpreter
-          Language.BrainHask.Optimizer
-          Language.BrainHask.Parser
-          Language.BrainHask.Preprocessor
-          Language.BrainHask.Types
-          Paths_brainhask
-    build-depends:
-          base
-        , bytestring
-        , criterion
-        , directory
-        , either
-        , optparse-applicative
-        , optparse-generic
-        , parsec
-        , pipes
-        , transformers
-    hs-source-dirs:
-          ./src/
-    ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
-    default-language: Haskell2010
+  main-is: Main.hs
+  other-modules:
+      Data.Tape
+      Data.Transformer
+      Language.BrainHask
+      Language.BrainHask.CLI
+      Language.BrainHask.Interpreter
+      Language.BrainHask.Optimizer
+      Language.BrainHask.Parser
+      Language.BrainHask.Preprocessor
+      Language.BrainHask.Types
+      Paths_brainhask
+  hs-source-dirs:
+      ./src/
+  ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
+  build-depends:
+      base
+    , bytestring
+    , criterion
+    , directory
+    , either
+    , optparse-applicative
+    , optparse-generic
+    , parsec
+    , pipes
+    , pretty-simple
+    , transformers
+  default-language: Haskell2010
 
 executable brainhask-bench
-    main-is: Main.hs
-    other-modules:
-          Paths_brainhask
-    hs-source-dirs:
-          ./benchmark/
-    ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
-    build-depends:
-          base
-        , brainhask
-        , bytestring
-        , criterion
-        , directory
-        , either
-        , file-embed
-        , filepath
-        , optparse-applicative
-        , optparse-generic
-        , parsec
-        , pipes
-        , text
-        , transformers
-    default-language: Haskell2010
+  main-is: Main.hs
+  other-modules:
+      Paths_brainhask
+  hs-source-dirs:
+      ./benchmark/
+  ghc-options: -O2 -funbox-strict-fields -rtsopts -threaded -with-rtsopts=-N
+  build-depends:
+      base
+    , brainhask
+    , bytestring
+    , criterion
+    , directory
+    , either
+    , file-embed
+    , filepath
+    , optparse-applicative
+    , optparse-generic
+    , parsec
+    , pipes
+    , pretty-simple
+    , text
+    , transformers
+  default-language: Haskell2010

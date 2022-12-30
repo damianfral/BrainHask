@@ -20,6 +20,7 @@ import Options.Generic
 import Pipes
 import System.Directory
 import System.IO
+import Text.Pretty.Simple (pPrint)
 
 data Options w = Options
   { input :: w ::: String <?> "brainfuck file",
@@ -55,7 +56,7 @@ runOptions (Options input o ast) (inp, outp) = do
     go :: Either String BFProgram -> IO ()
     go (Left errorMsg) = runEffect $ each (map c2w errorMsg) >-> outp
     go (Right program)
-      | ast = runEffect $ each (map c2w . show $ compile program) >-> outp
+      | ast = pPrint $ compile program
       | otherwise = void $ interpretBF inp outp $ compile program
       where
         compile = Language.BrainHask.optimize (fromMaybe O0 o) . preprocess

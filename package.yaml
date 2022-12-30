@@ -18,6 +18,7 @@ dependencies:
   - optparse-generic
   - directory
   - criterion
+  - pretty-simple
 
 library:
   source-dirs: ./src/
