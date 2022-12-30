@@ -24,12 +24,14 @@ data Program = Program
     bfProgram :: ILProgram Int
   }
 
+parseBS :: ByteString -> IO BFProgram
 parseBS =
   either (throwIO . userError . show) pure
     . parseBF
     . unpack
     . decodeUtf8With lenientDecode
 
+brainfuckFiles :: [(FilePath, ByteString)]
 brainfuckFiles = filter isBrainfuckFile files
   where
     files = $(makeRelativeToProject "brainfucks/" >>= embedDir)
@@ -52,11 +54,13 @@ main = do
     config = defaultConfig {resamples = 5}
 
 benchMachineIO :: (Producer Word8 IO (), Consumer Word8 IO ())
-benchMachineIO = (inp, outp)
+benchMachineIO = (inp', outp')
   where
-    inp = each (c2w <$> "23\n")
-    outp = await >> outp
+    inp' = each (c2w <$> "23\n")
+    outp' = await >> outp
 
+inp :: Producer Word8 IO ()
+outp :: Consumer Word8 IO ()
 (inp, outp) = benchMachineIO
 
 benchmarkProgram :: Program -> Benchmark

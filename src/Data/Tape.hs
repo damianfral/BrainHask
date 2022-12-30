@@ -16,6 +16,7 @@ data Tape a = Tape {_left :: [a], _getCursor :: !a, _right :: [a]}
 tapeOf :: a -> Tape a
 tapeOf x = Tape (repeat x) x (repeat x)
 
+getCursor :: Tape a -> a
 getCursor = _getCursor
 
 moveCursor :: Int -> Tape a -> Tape a

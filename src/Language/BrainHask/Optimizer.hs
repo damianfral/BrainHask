@@ -3,34 +3,39 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.BrainHask.Optimizer (optimize, OptimizationLevel (..)) where
-import Language.BrainHask.Types
-import GHC.Generics (Generic)
+
 import Data.List (intersperse)
+import GHC.Generics (Generic)
+import Language.BrainHask.Types
 
 -------------------------------------------------------------------------------
 
 data OptimizationLevel = O0 | O1 | O2 | O3 deriving (Eq, Show, Enum, Generic)
 
+set0Optimization :: ILOp Int Int -> ILOp Int Int
 set0Optimization (ILLoop [ILAdd _]) = ILSet 0
 set0Optimization (ILLoop xs) = ILLoop $ map set0Optimization xs
 set0Optimization l = l
 
+multOptimization :: ILOp Int Int -> ILOp Int Int
 multOptimization l@(ILLoop [ILMove m1, ILAdd a1, ILMove m2, ILAdd (-1)])
   | m1 + m2 == 0 = ILBlock [ILMove m1, ILAddMult (-m1) a1, ILMove (-m1), ILSet 0]
   | otherwise = l
-multOptimization l@(ILLoop [ILAdd (-1), ILMove m1, ILAdd a1, ILMove m2]) =
+multOptimization (ILLoop [ILAdd (-1), ILMove m1, ILAdd a1, ILMove m2]) =
   multOptimization (ILLoop [ILMove m1, ILAdd a1, ILMove m2, ILAdd (-1)])
 multOptimization (ILLoop xs) = ILLoop $ map multOptimization xs
 multOptimization l = l
 
+addToOptimization :: ILOp Int Int -> ILOp Int Int
 addToOptimization l@(ILLoop [ILMove m1, ILAdd x, ILMove m2, ILAdd (-1)])
   | m1 + m2 == 0 && x > 0 = ILBlock $ replicate x (ILAddTo m1) <> [ILSet 0]
   | otherwise = l
-addToOptimization l@(ILLoop [ILAdd (-1), ILMove m1, ILAdd 1, ILMove m2]) =
+addToOptimization (ILLoop [ILAdd (-1), ILMove m1, ILAdd 1, ILMove m2]) =
   addToOptimization $ ILLoop [ILMove m1, ILAdd 1, ILMove m2, ILAdd (-1)]
 addToOptimization (ILLoop xs) = ILLoop $ map addToOptimization xs
 addToOptimization l = l
 
+doubleAddToOptimization :: ILOp Int Int -> ILOp Int Int
 doubleAddToOptimization
   l@( ILLoop
         [ ILMove m1,
@@ -58,6 +63,7 @@ transform n = foldr1 (.) optList
   where
     optList = intersperse expandBlocks $ fmap <$> take n optimizations
 
+optimizations :: [ILOp Int Int -> ILOp Int Int]
 optimizations =
   [ set0Optimization,
     multOptimization,

@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Language.BrainHask.CLI where
 
@@ -34,18 +35,18 @@ data Options w = Options
       w
         ::: File
         <?> "brainfuck file"
-          <#> "i",
+        <#> "i",
     optimize ::
       w
         ::: OptimizationLevel
         <?> "optimization level (0|1|2)"
-          <#> "o"
-            <!> "3",
+        <#> "o"
+        <!> "3",
     ast ::
       w
         ::: Bool
         <?> "print the abstract syntax tree"
-          <#> "a"
+        <#> "a"
   }
   deriving (Generic, Typeable)
 
@@ -72,15 +73,15 @@ readInput fn =
       else pure $ Left $ fn ++ " does not exist"
 
 runOptions :: Options Unwrapped -> (Producer Word8 IO (), Consumer Word8 IO ()) -> IO ()
-runOptions (Options (File input) o ast) (inp, outp) = do
-  string <- readInput input
+runOptions (Options (File inputFile) o printAST) (inp, outp) = do
+  string <- readInput inputFile
   let program = string >>= mapLeft show . parseBF
   go program
   where
     go :: Either String BFProgram -> IO ()
     go (Left errorMsg) = runEffect $ each (map c2w errorMsg) >-> outp
     go (Right program)
-      | ast = pPrint $ compile program
+      | printAST = pPrint $ compile program
       | otherwise = void $ interpretBF inp outp $ compile program
       where
         compile = Language.BrainHask.optimize o . preprocess

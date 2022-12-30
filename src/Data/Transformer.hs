@@ -40,7 +40,7 @@ instance MonadPlus (Transformer a) where
   mplus = (<|>)
 
 instance MonadFail (Transformer a) where
-  fail msg = Transformer $ const Nothing
+  fail _ = Transformer $ const Nothing
 
 satisfies :: (a -> Bool) -> Transformer a a
 satisfies f = do

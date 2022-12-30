@@ -33,6 +33,7 @@ executables:
       - -rtsopts
       - -threaded
       - -with-rtsopts=-N
+      - -Wall
 
   brainhask-bench:
     main: Main.hs
@@ -48,3 +49,4 @@ executables:
       - -rtsopts
       - -threaded
       - -with-rtsopts=-N
+      - -Wall
