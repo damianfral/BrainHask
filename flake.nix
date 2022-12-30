@@ -4,14 +4,18 @@
   inputs = {
     nixpkgs = { url = "github:NixOS/nixpkgs/"; };
     flake-utils = { url = "github:numtide/flake-utils"; };
+    nix-filter.url = "github:numtide/nix-filter";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter }:
 
     let
       pkgsFor = system: import nixpkgs {
         inherit system;
-        overlays = [ self.overlays.${system} ];
+        overlays = [
+          self.overlays.${system}
+          nix-filter.overlays.default
+        ];
       };
     in
 
@@ -19,6 +23,17 @@
       (system:
         let
           pkgs = pkgsFor system;
+          filteredSrc =
+            pkgs.nix-filter {
+              root = ./.;
+              include = [
+                "src/"
+                "package.yaml"
+                "LICENSE"
+                "benchmark/"
+                "brainfucks/"
+              ];
+            };
         in
         rec {
           packages = rec {
@@ -26,7 +41,7 @@
               pkgs.haskellPackages.brainhask;
             brainhask-bench-results = pkgs.stdenv.mkDerivation {
               name = "brainhask-bench-results";
-              src = ./.;
+              src = filteredSrc;
               buildPhase = ''
                 ${brainhask}/bin/brainhask-bench --output benchmark-results.html
               '';
@@ -69,7 +84,7 @@
               overrides = final.lib.composeExtensions
                 (old.overrides or (_: _: { }))
                 (self: super: {
-                  brainhask = self.callCabal2nix "brainhask" ./. { };
+                  brainhask = self.callCabal2nix "brainhask" filteredSrc { };
                 }
                 );
             });
