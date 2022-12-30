@@ -21,9 +21,20 @@
           pkgs = pkgsFor system;
         in
         rec {
-          packages = {
+          packages = rec {
             brainhask = pkgs.haskell.lib.justStaticExecutables
               pkgs.haskellPackages.brainhask;
+            brainhask-bench-results = pkgs.stdenv.mkDerivation {
+              name = "brainhask-bench-results";
+              src = ./.;
+              buildPhase = ''
+                ${brainhask}/bin/brainhask-bench --output benchmark-results.html
+              '';
+              installPhase = ''
+                mkdir -p $out
+                mv benchmark-results.html $out/
+              '';
+            };
           };
 
           defaultPackage = packages.brainhask;

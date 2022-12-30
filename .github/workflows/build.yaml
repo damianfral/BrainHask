@@ -24,4 +24,12 @@ jobs:
           extra_nix_config: |
             sandbox = false
       - name: brainhask-bench
-        run: nix run .#brainhask-bench
+        run: |
+          nix build .#brainhask-bench-results
+          cat ./result/benchmark-results.html > ~/benchmark-results.html
+
+      - name: upload-bench-results
+        uses: actions/upload-artifact@v3
+        with:
+          name: brainhask-bench-results-${{ github.run_id }}-${{ github.run_number }}
+          path: ~/benchmark-results.html
