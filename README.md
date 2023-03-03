@@ -26,7 +26,7 @@ Available options:
 
 
 ```shell
-nix run github:damianfral/brainhask-bench -- --output criterion-report.html
+nix run github:damianfral/BrainHask#brainhask-bench -- --output criterion-report.html
 ```
 
 ![benchmark graph](benchmark/criterion-report.png)
