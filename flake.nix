@@ -120,5 +120,9 @@
         inherit (precommitCheck) shellHook;
       };
     });
+  nixConfig = {
+    extra-substituters = "https://opensource.cachix.org";
+    extra-trusted-public-keys = "opensource.cachix.org-1:6t9YnrHI+t4lUilDKP2sNvmFA9LCKdShfrtwPqj2vKc=";
+  };
 }
 
