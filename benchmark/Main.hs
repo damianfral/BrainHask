@@ -25,11 +25,10 @@ data Program = Program
   }
 
 parseBS :: ByteString -> IO BFProgram
-parseBS =
-  either (throwIO . userError . show) pure
-    . parseBF
-    . unpack
-    . decodeUtf8With lenientDecode
+parseBS = throwIfLeft . parseBF . unpack . decodeUtf8With lenientDecode
+  where
+    throwIfLeft (Left e) = throwIO . userError . show $ e
+    throwIfLeft (Right v) = pure v
 
 brainfuckFiles :: [(FilePath, ByteString)]
 brainfuckFiles = filter isBrainfuckFile files

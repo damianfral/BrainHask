@@ -1,8 +1,8 @@
 module Language.BrainHask.Preprocessor (preprocess) where
 
+import Data.Functor (($>))
 import Data.Transformer
 import Language.BrainHask.Types
-import Data.Functor (($>))
 
 type Preprocessor a = Transformer BFOp (ILOp Int a)
 
