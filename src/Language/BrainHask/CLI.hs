@@ -35,19 +35,19 @@ data Options w = Options
   { input ::
       w
         ::: File
-        <?> "brainfuck file"
-        <#> "i",
+          <?> "brainfuck file"
+          <#> "i",
     optimize ::
       w
         ::: OptimizationLevel
-        <?> "optimization level (0|1|2)"
-        <#> "o"
-        <!> "3",
+          <?> "optimization level (0|1|2)"
+          <#> "o"
+          <!> "2",
     ast ::
       w
         ::: Bool
-        <?> "print the abstract syntax tree"
-        <#> "a"
+          <?> "print the abstract syntax tree"
+          <#> "a"
   }
   deriving (Generic, Typeable)
 
@@ -57,12 +57,13 @@ instance ParseFields OptimizationLevel
 
 instance ParseField OptimizationLevel where
   readField =
-    readField >>= parseStr
+    readField >>= intToOptimizationLevel
     where
-      parseStr :: Int -> ReadM OptimizationLevel
-      parseStr 1 = pure O1
-      parseStr 2 = pure O2
-      parseStr _ = pure O0
+      intToOptimizationLevel :: Int -> ReadM OptimizationLevel
+      intToOptimizationLevel 0 = pure O0
+      intToOptimizationLevel 1 = pure O1
+      intToOptimizationLevel 2 = pure O2
+      intToOptimizationLevel _ = pure O2
 
 instance ParseRecord (Options Wrapped)
 
