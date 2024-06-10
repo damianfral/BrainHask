@@ -2,14 +2,13 @@
 
 A Brainfuck interpreter written in Haskell.
 
-
 ## Run
 
 ```shell
 nix run github:damianfral/brainhask -- --help
 ```
 
-```
+```text
 brainhask - a brainfuck interpreter
 
 Usage: brainhask (-i|--input FILE) [-o|--optimize OPTIMIZATIONLEVEL] [-a|--ast]
@@ -23,7 +22,6 @@ Available options:
 ```
 
 ## Benchmark
-
 
 ```shell
 nix run github:damianfral/BrainHask#brainhask-bench -- --output criterion-report.html
