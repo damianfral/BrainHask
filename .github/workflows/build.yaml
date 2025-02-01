@@ -5,13 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
       - name: install nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@master
         with:
           extra_nix_config: |
             sandbox = false
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/cachix-action@master
         with:
           name: opensource
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
@@ -21,13 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
       - name: install nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@master
         with:
           extra_nix_config: |
             sandbox = false
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/cachix-action@master
         with:
           name: opensource
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
@@ -37,7 +37,7 @@ jobs:
           cat ./result/benchmark-results.html > ~/benchmark-results.html
 
       - name: upload-bench-results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@main
         with:
           name: brainhask-bench-results-${{ github.run_id }}-${{ github.run_number }}
           path: ~/benchmark-results.html
