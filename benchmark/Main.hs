@@ -41,8 +41,8 @@ loadPrograms (filename, src) = do
   program <- parseBS src
   pure $
     [ Program filename optimizationLevel optimizedProgram
-      | optimizationLevel <- [O0 .. O3],
-        optimizedProgram <- [optimize optimizationLevel $ preprocess program]
+    | optimizationLevel <- [O0 .. O3],
+      optimizedProgram <- [optimize optimizationLevel $ preprocess program]
     ]
 
 main :: IO ()
