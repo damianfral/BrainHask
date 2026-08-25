@@ -1,5 +1,6 @@
 ---
 name: brainhask
+synopsis: Brainfuck interpreter
 version: 1.0.0.0
 
 license: MIT
