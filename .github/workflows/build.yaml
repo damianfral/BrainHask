@@ -15,8 +15,14 @@ jobs:
         with:
           name: opensource
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - uses: damianfral/nix-cache-lookup@master
+        id: cache-lookup-default
+        name: Check if already cached
+        with:
+          flake-attribute: .#default
       - name: nix build
         run: nix build
+        if: steps.cache-lookup-default.outputs.cached != 'true'
   bench:
     runs-on: ubuntu-latest
     steps:
@@ -31,13 +37,20 @@ jobs:
         with:
           name: opensource
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - uses: damianfral/nix-cache-lookup@master
+        id: cache-lookup-brainhask-bench-results
+        name: Check if already cached
+        with:
+          flake-attribute: .#brainhask-bench-results
       - name: brainhask-bench
         run: |
           nix build .#brainhask-bench-results --accept-flake-config
           cat ./result/benchmark-results.html > ~/benchmark-results.html
 
+        if: steps.cache-lookup-brainhask-bench-results.outputs.cached != 'true'
       - name: upload-bench-results
         uses: actions/upload-artifact@main
         with:
           name: brainhask-bench-results-${{ github.run_id }}-${{ github.run_number }}
           path: ~/benchmark-results.html
+        if: steps.cache-lookup-brainhask-bench-results.outputs.cached != 'true'
